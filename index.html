@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prakhar's Art Gallery | Official Portfolio</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,500&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --cobalt: #0047AB; --emerald: #008552; --saffron: #F4C430;
+            --onyx: #121212; --cream: #FAF9F6;
+            --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cream);
+            color: var(--onyx);
+            background-image: radial-gradient(at 0% 0%, rgba(0, 71, 171, 0.05) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(244, 196, 48, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            line-height: 1.6;
+        }
+
+        /* --- Header & About --- */
+        header { padding: 100px 20px 40px; text-align: center; }
+        header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 10vw, 5.5rem); font-weight: 300; }
+        header h1 span { font-style: italic; color: var(--cobalt); }
+
+        .about-section {
+            max-width: 800px; margin: 0 auto 80px; padding: 40px;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+            text-align: center; border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.02);
+        }
+        .about-section h2 { font-family: 'Cormorant Garamond', serif; margin-bottom: 15px; font-size: 2rem; }
+        .accent-line { width: 80px; height: 3px; background: var(--saffron); margin: 25px auto 0; }
+
+        /* --- Admin Dashboard --- */
+        #admin-zone { 
+            display: none; max-width: 1200px; margin: 0 auto 40px; 
+            padding: 30px; background: white; border: 2px solid var(--cobalt);
+        }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        input { padding: 12px; border: 1px solid #ddd; font-family: inherit; border-radius: 4px; }
+        .btn-publish { background: var(--cobalt); color: white; border: none; padding: 12px; cursor: pointer; font-weight: 600; }
+
+        /* --- Gallery --- */
+        .container { max-width: 1300px; margin: 0 auto; padding: 0 30px 100px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 60px; }
+        
+        .art-card { background: white; padding: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: var(--transition); border-bottom: 5px solid var(--cobalt); position: relative; }
+        .art-card:nth-child(2n) { border-bottom-color: var(--emerald); }
+        .art-card:nth-child(3n) { border-bottom-color: var(--saffron); }
+        .art-card:hover { transform: translateY(-10px); box-shadow: 0 30px 60px rgba(0,0,0,0.12); }
+
+        .img-box { height: 450px; overflow: hidden; margin-bottom: 25px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: zoom-in; }
+        .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; transition: var(--transition); user-select: none; }
+        .art-card:hover img { transform: scale(1.02); }
+
+        .info h3 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin-bottom: 5px; }
+        .node_meta { display: block; font-size: 0.8rem; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+
+        /* --- Interaction --- */
+        .card-actions { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+        .like-btn { 
+            background: none; border: 1px solid #eee; padding: 10px 20px; 
+            border-radius: 50px; cursor: pointer; font-family: inherit; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .like-btn:hover { border-color: var(--onyx); }
+        .like-btn.liked { background: #ffe6e6; color: #ff4d4d; border-color: #ff4d4d; }
+
+        .delete-btn {
+            display: none; background: none; border: 1px solid #ff4d4d; color: #ff4d4d;
+            padding: 10px 15px; border-radius: 50px; cursor: pointer; font-family: inherit;
+            font-size: 0.85rem; font-weight: 600; transition: 0.3s;
+        }
+        .delete-btn:hover { background: #ff4d4d; color: white; }
+
+        /* Comment Layout */
+        .comment-area { margin-top: 20px; border-top: 1px solid #f5f5f5; padding-top: 20px; }
+        .comment-input-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .comment-inputs { display: flex; gap: 8px; }
+        .comment-inputs input { font-size: 0.9rem; border: 1px solid #eee; background: #fbfbfb; }
+        .comment-inputs .input-name { width: 35%; } 
+        .comment-inputs .input-text { flex: 1; }
+
+        .comment-list { max-height: 180px; overflow-y: auto; font-size: 0.85rem; color: #666; }
+        
+        .comment-item { 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 8px 0; border-bottom: 1px solid #f9f9f9; 
+        }
+        .comment-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; padding-right: 10px; }
+        .comment-meta-line { font-size: 0.7rem; color: #aaa; margin-top: 2px; }
+        .author-tag { color: var(--cobalt); font-weight: 600; margin-right: 6px; }
+        
+        .comment-del-btn { 
+            background: none; border: none; color: #ccc; cursor: pointer; 
+            font-size: 0.75rem; padding: 2px 6px; transition: 0.2s; align-self: center;
+        }
+        .comment-del-btn:hover { color: #ff4d4d; }
+
+        /* Fullscreen Lightbox Overlay */
+        #lightbox-overlay {
+            display: none; position: fixed; z-index: 9999; top: 0; left: 0;
+            width: 100vw; height: 100vh; background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(15px); align-items: center; justify-content: center;
+            cursor: zoom-out; opacity: 0; transition: opacity 0.3s ease;
+        }
+        #lightbox-overlay.active { display: flex; opacity: 1; }
+        #lightbox-img { max-width: 90vw; max-height: 90vh; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.3s ease; }
+        #lightbox-overlay.active #lightbox-img { transform: scale(1); }
+
+        footer { padding: 100px 20px; text-align: center; border-top: 1px solid #eee; background: white; }
+        .login-trigger { font-size: 0.65rem; text-transform: uppercase; color: #ddd; cursor: pointer; border: none; background: none; }
+        
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .comment-inputs { flex-direction: column; } .comment-inputs .input-name { width: 100%; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <p style="letter-spacing: 5px; font-size: 0.7rem; text-transform: uppercase; opacity: 0.5;">Est. 2026</p>
+        <h1>Prakhar's <span>Art Gallery</span></h1>
+    </header>
+
+    <section class="about-section">
+        <h2>About the Artist</h2>
+        <p>I believe that art is a silent conversation between the creator and the observer. My work focuses on the emotional weight of primary colors—using deep blues, organic greens, and radiant yellows to capture moments of human introspection.</p>
+        <div class="accent-line"></div>
+    </section>
+
+    <div id="admin-zone">
+        <h3 style="margin-bottom: 20px; font-family: 'Cormorant Garamond';">Curator Dashboard</h3>
+        <div class="admin-grid">
+            <input type="text" id="new-title" placeholder="Painting Title">
+            <input type="text" id="new-meta" placeholder="Medium & Year (e.g. Oil, 2026)">
+            <input type="text" id="new-url" placeholder="Paste Image URL here...">
+            <button class="btn-publish" onclick="uploadArt()">Publish Masterpiece</button>
+            <button onclick="logout()" style="background:none; border:none; color:red; cursor:pointer; margin-left: 10px;">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="grid" id="gallery-grid">
+            </div>
+    </div>
+
+    <div id="lightbox-overlay" onclick="closeLightbox()" oncontextmenu="return false;">
+        <img id="lightbox-img" src="" alt="Masterpiece Zoom View" oncontextmenu="return false;">
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Prakhar's Gallery &bull; All Rights Reserved</p>
+        <button class="login-trigger" id="login-btn" onclick="adminLogin()">[ Curator Login ]</button>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, updateDoc, increment, arrayUnion, arrayRemove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzzj1TomdQ874g322-S-TVLWXU1Usb1bU",
+            authDomain: "pg-art-gallery.firebaseapp.com",
+            projectId: "pg-art-gallery",
+            storageBucket: "pg-art-gallery.firebasestorage.app",
+            messagingSenderId: "979626373978",
+            appId: "1:979626373978:web:ac2633c9bc51de43187963",
+            measurementId: "G-P5EH65SJEN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        let isAdmin = false;
+        const secureKey = "cGcucHJha2hhcmdAZ21haWwuY29t"; 
+
+        // --- AUTH LOGIC ---
+        window.adminLogin = async () => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                if (result.user.email !== atob(secureKey)) {
+                    alert("Unauthorized email. Admin functions locked.");
+                    await signOut(auth);
+                }
+            } catch (e) { 
+                alert("Login failed: " + e.message); 
+            }
+        };
+
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            const zone = document.getElementById('admin-zone');
+            const loginBtn = document.getElementById('login-btn');
+            
+            if (user && user.email === atob(secureKey)) {
+                isAdmin = true;
+                zone.style.display = "block";
+                loginBtn.style.display = "none";
+            } else {
+                isAdmin = false;
+                zone.style.display = "none";
+                loginBtn.style.display = "inline-block";
+            }
+            if(window.currentSnapshot) {
+                renderGallery(window.currentSnapshot);
+            }
+        });
+
+        // --- GALLERY LOGIC ---
+        const galleryGrid = document.getElementById('gallery-grid');
+        const q = query(collection(db, "paintings"), orderBy("createdAt", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            window.currentSnapshot = snapshot;
+            renderGallery(snapshot);
+        });
+
+        function renderGallery(snapshot) {
+            galleryGrid.innerHTML = "";
+            if (snapshot.empty) {
+                galleryGrid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; opacity: 0.5;'>The gallery is empty. Log in below to publish your first masterpiece!</p>";
+                return;
+            }
+            snapshot.forEach((docSnap) => {
+                renderCard(docSnap.id, docSnap.data());
+            });
+        }
+
+        function renderCard(id, data) {
+            const hasLiked = localStorage.getItem(`liked-${id}`) === 'true';
+            const card = document.createElement('div');
+            card.className = 'art-card';
+            
+            const commentsHtml = (data.comments || []).slice().reverse().map((commentObj, index) => {
+                const trueIndex = (data.comments.length - 1) - index; 
+                
+                let text = "";
+                let author = "";
+                let timestamp = "";
+                let location = "";
+
+                if (typeof commentObj === 'object' && commentObj !== null) {
+                    text = commentObj.text || "";
+                    author = commentObj.author || "";
+                    timestamp = commentObj.timestamp || "";
+                    location = commentObj.location || "";
+                } else {
+                    text = commentObj; 
+                }
+
+                const authorTag = author ? `<span class="author-tag">${author}:</span>` : '';
+                
+                let metaString = timestamp;
+                if(location) metaString += ` • from ${location}`;
+                const metaLine = metaString ? `<span class="comment-meta-line">${metaString}</span>` : '';
+
+                return `
+                    <div class="comment-item">
+                        <div class="comment-content-wrapper">
+                            <span>${authorTag}${text}</span>
+                            ${metaLine}
+                        </div>
+                        <button class="comment-del-btn" style="display: ${isAdmin ? 'inline-block' : 'none'}" onclick="handleDeleteComment('${id}', ${trueIndex})">✕</button>
+                    </div>
+                `;
+            }).join('');
+
+            card.innerHTML = `
+                <div class="img-box" ondblclick="openLightbox('${data.url}')" oncontextmenu="return false;"><img src="${data.url}" alt="${data.title}"></div>
+                <div class="info">
+                    <h3>${data.title}</h3>
+                    <span class="node_meta">${data.meta || ''}</span>
+                    
+                    <div class="card-actions">
+                        <button class="like-btn ${hasLiked ? 'liked' : ''}" id="like-${id}">❤ <span>${data.likes || 0}</span> Likes</button>
+                        <button class="delete-btn" id="delete-${id}" style="display: ${isAdmin ? 'inline-block' : 'none'}">🗑 Delete Artwork</button>
+                    </div>
+
+                    <div class="comment-area">
+                        <div class="comment-input-row">
+                            <div class="comment-inputs">
+                                <input type="text" id="name-${id}" class="input-name" placeholder="Name (Optional)">
+                                <input type="text" id="in-${id}" class="input-text" placeholder="Write an appreciation...">
+                            </div>
+                            <button class="btn-publish" style="padding:10px; font-size:0.75rem;" id="post-${id}">Post Appreciation</button>
+                        </div>
+                        <div class="comment-list">
+                            ${commentsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+            galleryGrid.appendChild(card);
+
+            card.querySelector(`#like-${id}`).onclick = () => handleLike(id);
+            card.querySelector(`#post-${id}`).onclick = () => handleComment(id);
+            card.querySelector(`#delete-${id}`).onclick = () => handleDestroy(id, data.title);
+        }
+
+        window.openLightbox = (url) => {
+            const overlay = document.getElementById('lightbox-overlay');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            overlay.style.display = "flex";
+            setTimeout(() => overlay.classList.add('active'), 10);
+        };
+
+        window.closeLightbox = () => {
+            const overlay = document.getElementById('lightbox-overlay');
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.style.display = "none", 300);
+        };
+
+        async function handleLike(id) {
+            if (localStorage.getItem(`liked-${id}`) === 'true') {
+                alert("You've already appreciated this masterpiece!");
+                return;
+            }
+            const docRef = doc(db, "paintings", id);
+            await updateDoc(docRef, { likes: increment(1) });
+            localStorage.setItem(`liked-${id}`, 'true');
+        }
+
+        // FIXED: Complete structural sync of the location-fetching process
+        async function handleComment(id) {
+            const inputEl = document.getElementById(`in-${id}`);
+            const nameEl = document.getElementById(`name-${id}`);
+            const postBtn = document.getElementById(`post-${id}`);
+            const textVal = inputEl.value;
+            const nameVal = nameEl.value.trim();
+            
+            if(!textVal) return;
+            
+            // Format timestamp instantly
+            const now = new Date();
+            const timeString = now.toLocaleDateString('en-US', { 
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+
+            let locationString = "";
+
+            try {
+                // Temporarily flag button during lookups
+                postBtn.disabled = true;
+                postBtn.innerHTML = "Processing...";
+
+                if (navigator.geolocation) {
+                    // CRITICAL SYNC FIX: Force the system to freeze and completely wait for the visitor's choice
+                    const position = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                            timeout: 6000, 
+                            maximumAge: 0 // Force fresh location tracking right now
+                        });
+                    });
+                    
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                    if (geoResponse.ok) {
+                        const geoData = await geoResponse.json();
+                        const city = geoData.city || geoData.locality || "";
+                        const country = geoData.countryName || "";
+                        locationString = city && country ? `${city}, ${country}` : city || country;
+                    }
+                }
+            } catch (geoError) {
+                console.log("Location prompt skipped or denied by visitor.");
+            }
+            
+            const docRef = doc(db, "paintings", id);
+            
+            const newCommentObj = {
+                text: textVal,
+                author: nameVal || "",
+                timestamp: timeString,
+                location: locationString
+            };
+
+            await updateDoc(docRef, { comments: arrayUnion(newCommentObj) });
+            
+            // Reset input text lines smoothly
+            inputEl.value = "";
+            nameEl.value = "";
+            postBtn.disabled = false;
+            postBtn.innerHTML = "Post Appreciation";
+        }
+
+        window.handleDeleteComment = async (paintingId, arrayIndex) => {
+            if (confirm("Delete this comment from the gallery?")) {
+                const docRef = doc(db, "paintings", paintingId);
+                try {
+                    const targetSnap = window.currentSnapshot.docs.find(d => d.id === paintingId);
+                    if(targetSnap) {
+                        const currentComments = targetSnap.data().comments || [];
+                        const targetCommentObj = currentComments[arrayIndex];
+                        
+                        await updateDoc(docRef, {
+                            comments: arrayRemove(targetCommentObj)
+                        });
+                    }
+                } catch(e) {
+                    alert("Error removing comment: " + e.message);
+                }
+            }
+        };
+
+        window.handleDestroy = async (id, title) => {
+            if (confirm(`Are you sure you want to remove "${title}" from the live gallery?`)) {
+                try {
+                    await deleteDoc(doc(db, "paintings", id));
+                    alert("Masterpiece removed successfully.");
+                } catch (e) {
+                    alert("Error deleting painting: " + e.message);
+                }
+            }
+        };
+
+        window.uploadArt = async () => {
+            const title = document.getElementById('new-title').value;
+            const meta = document.getElementById('new-meta').value;
+            const url = document.getElementById('new-url').value;
+            if(!title || !url) return alert("Title and Image URL are required.");
+
+            try {
+                await addDoc(collection(db, "paintings"), {
+                    title, meta, url, likes: 0, comments: [], createdAt: serverTimestamp()
+                });
+                document.getElementById('new-title').value = "";
+                document.getElementById('new-meta').value = "";
+                document.getElementById('new-url').value = "";
+                alert("Painting added to live gallery!");
+            } catch (e) {
+                alert("Upload failed: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>
