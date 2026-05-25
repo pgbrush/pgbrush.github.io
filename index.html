@@ -157,9 +157,15 @@
 
     <footer>
         <p>&copy; 2026 Prakhar's Gallery &bull; All Rights Reserved</p>
-        <button class="login-trigger" id="login-btn" onclick="adminLogin()">[ Curator Login ]</button>
-    </footer>
         
+        <div id="view-counter-line" style="display: none; margin: 25px auto 0; max-width: 180px; padding: 6px 12px; border: 1px solid rgba(0,0,0,0.06); background: rgba(0,0,0,0.01); border-radius: 50px; align-items: center; justify-content: center; gap: 8px; font-size: 0.65rem; color: #888; letter-spacing: 1.5px; text-transform: uppercase;">
+            <span style="width: 6px; height: 6px; background: var(--cobalt); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--cobalt);"></span>
+            Views: <span id="view-count-number" style="color: var(--onyx); font-weight: 600; font-family: monospace; font-size: 0.8rem; margin-left: 2px;">...</span>
+        </div>
+
+        <button class="login-trigger" id="login-btn" onclick="adminLogin()" style="margin-top: 25px;">[ Curator Login ]</button>
+    </footer>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, updateDoc, increment, arrayUnion, arrayRemove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -331,7 +337,6 @@
             localStorage.setItem(`liked-${id}`, 'true');
         }
 
-        // FIXED: Complete structural sync of the location-fetching process
         async function handleComment(id) {
             const inputEl = document.getElementById(`in-${id}`);
             const nameEl = document.getElementById(`name-${id}`);
@@ -341,7 +346,6 @@
             
             if(!textVal) return;
             
-            // Format timestamp instantly
             const now = new Date();
             const timeString = now.toLocaleDateString('en-US', { 
                 month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
@@ -350,16 +354,14 @@
             let locationString = "";
 
             try {
-                // Temporarily flag button during lookups
                 postBtn.disabled = true;
                 postBtn.innerHTML = "Processing...";
 
                 if (navigator.geolocation) {
-                    // CRITICAL SYNC FIX: Force the system to freeze and completely wait for the visitor's choice
                     const position = await new Promise((resolve, reject) => {
                         navigator.geolocation.getCurrentPosition(resolve, reject, { 
                             timeout: 6000, 
-                            maximumAge: 0 // Force fresh location tracking right now
+                            maximumAge: 0 
                         });
                     });
                     
@@ -389,7 +391,6 @@
 
             await updateDoc(docRef, { comments: arrayUnion(newCommentObj) });
             
-            // Reset input text lines smoothly
             inputEl.value = "";
             nameEl.value = "";
             postBtn.disabled = false;
@@ -445,21 +446,16 @@
             }
         };
 
- // --- LIVE METRIC COUNTER PIPELINE ---
+        // --- LIVE METRIC COUNTER PIPELINE ---
         async function bootstrapVisitorCounter() {
             try {
-                // Connects to a highly stable, instant hit counter node
                 const namespace = "pgbrush_art_gallery";
                 const response = await fetch(`https://api.counterapi.dev/v1/${namespace}/global/up`);
-                
                 if (response.ok) {
                     const data = await response.json();
-                    
                     const counterBox = document.getElementById('view-counter-line');
                     const counterNumber = document.getElementById('view-count-number');
-                    
                     if (data && typeof data.count !== 'undefined') {
-                        // Pad the number beautifully (e.g., 00042) to match premium luxury tech metrics
                         counterNumber.textContent = String(data.count).padStart(5, '0');
                         counterBox.style.display = 'inline-flex';
                     }
@@ -469,8 +465,8 @@
             }
         }
         
+        // Initialize counter
         bootstrapVisitorCounter();
-        
     </script>
 </body>
 </html>
