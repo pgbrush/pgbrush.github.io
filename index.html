@@ -157,10 +157,35 @@
 
     <footer>
         <p>&copy; 2026 Prakhar's Gallery &bull; All Rights Reserved</p>
-        <p style="margin-top: 15px;"><img src="https://count.getloli.com/get/@pgbrush_art_gallery?theme=asoul" alt="Views Tracking Badge" oncontextmenu="return false;" style="user-select:none; max-height: 35px;"/></p>
         <button class="login-trigger" id="login-btn" onclick="adminLogin()">[ Curator Login ]</button>
     </footer>
 
+        // --- LIVE METRIC COUNTER PIPELINE ---
+        async function bootstrapVisitorCounter() {
+            try {
+                // Connects to a highly stable, instant hit counter node
+                const namespace = "pgbrush_art_gallery";
+                const response = await fetch(`https://api.counterapi.dev/v1/${namespace}/global/up`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    const counterBox = document.getElementById('view-counter-line');
+                    const counterNumber = document.getElementById('view-count-number');
+                    
+                    if (data && typeof data.count !== 'undefined') {
+                        // Pad the number beautifully (e.g., 00042) to match premium luxury tech metrics
+                        counterNumber.textContent = String(data.count).padStart(5, '0');
+                        counterBox.style.display = 'inline-flex';
+                    }
+                }
+            } catch (error) {
+                console.log('Metrics tracking skipped.');
+            }
+        }
+        
+        bootstrapVisitorCounter();
+        
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, updateDoc, increment, arrayUnion, arrayRemove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
