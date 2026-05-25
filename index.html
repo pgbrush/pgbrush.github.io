@@ -158,17 +158,16 @@
     <footer>
         <p>&copy; 2026 Prakhar's Gallery &bull; All Rights Reserved</p>
         
-        <div id="view-counter-line" style="display: none; margin: 25px auto 0; max-width: 180px; padding: 6px 12px; border: 1px solid rgba(0,0,0,0.06); background: rgba(0,0,0,0.01); border-radius: 50px; align-items: center; justify-content: center; gap: 8px; font-size: 0.65rem; color: #888; letter-spacing: 1.5px; text-transform: uppercase;">
-            <span style="width: 6px; height: 6px; background: var(--cobalt); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--cobalt);"></span>
-            Views: <span id="view-count-number" style="color: var(--onyx); font-weight: 600; font-family: monospace; font-size: 0.8rem; margin-left: 2px;">...</span>
-        </div>
+        <p id="view-counter-line" style="display: none; margin-top: 15px; font-size: 0.75rem; color: #aaa; letter-spacing: 2px; text-transform: uppercase;">
+            Gallery Views: <span id="view-count-number" style="color: var(--cobalt); font-weight: 600;">...</span>
+        </p>
 
         <button class="login-trigger" id="login-btn" onclick="adminLogin()" style="margin-top: 25px;">[ Curator Login ]</button>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, updateDoc, increment, arrayUnion, arrayRemove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, updateDoc, increment, arrayUnion, arrayRemove, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -446,27 +445,34 @@
             }
         };
 
-        // --- LIVE METRIC COUNTER PIPELINE ---
-        async function bootstrapVisitorCounter() {
+        // --- INTERNAL FIRESTORE METRIC COUNTER ENGINE ---
+        async function runInternalVisitorCounter() {
             try {
-                const namespace = "pgbrush_art_gallery";
-                const response = await fetch(`https://api.counterapi.dev/v1/${namespace}/global/up`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const counterBox = document.getElementById('view-counter-line');
+                // Pinpoints a dedicated document inside a new "metrics" collection
+                const metricDocRef = doc(db, "metrics", "analytics");
+                
+                // 1. Increment total hits instantly in the database cloud storage node
+                await setDoc(metricDocRef, { totalViews: increment(1) }, { merge: true });
+                
+                // 2. Fetch the updated score back seamlessly to display on screen
+                const snapshot = await getDoc(metricDocRef);
+                if (snapshot.exists()) {
+                    const totalViews = snapshot.data().totalViews || 1;
+                    
+                    const counterLine = document.getElementById('view-counter-line');
                     const counterNumber = document.getElementById('view-count-number');
-                    if (data && typeof data.count !== 'undefined') {
-                        counterNumber.textContent = String(data.count).padStart(5, '0');
-                        counterBox.style.display = 'inline-flex';
-                    }
+                    
+                    // Render beautifully formatted text matching the high-end font choices
+                    counterNumber.textContent = totalViews;
+                    counterLine.style.display = 'block';
                 }
             } catch (error) {
-                console.log('Metrics tracking skipped.');
+                console.log("Internal analytics counter omitted.");
             }
         }
-        
-        // Initialize counter
-        bootstrapVisitorCounter();
+
+        // Execute the tracking pipeline instantly on window initialization
+        runInternalVisitorCounter();
     </script>
 </body>
 </html>
