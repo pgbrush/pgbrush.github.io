@@ -129,20 +129,27 @@
         <h1>Prakhar's <span>Art Gallery</span></h1>
     </header>
 
-    <section class="about-section">
+<section class="about-section" style="margin-bottom: 40px; padding-bottom: 25px;">
         <h2>About the Artist</h2>
-        <p>I believe that art is a silent conversation between the creator and the observer. My work focuses on the emotional weight of primary colors—using deep blues, organic greens, and radiant yellows to capture moments of human introspection.</p>        
-        <div class="accent-line" style="margin-bottom: 40px;"></div>
+        <p>I believe that art is a silent conversation between the creator and the observer. My work focuses on the emotional weight of primary colors—using deep blues, organic greens, and radiant yellows to capture moments of human introspection.</p>
+        <div class="accent-line" style="margin: 15px auto 20px;"></div>
 
-        <div style="max-width: 500px; margin: 0 auto; text-align: left; background: #fff; padding: 30px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 10px 30px rgba(0,0,0,0.01);">
-            <h4 style="font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; margin-bottom: 20px; text-align: center; letter-spacing: 1px;">Send a Direct Message</h4>
+        <!-- Ultra-Compact Direct Message Row Setup -->
+        <div style="max-width: 650px; margin: 0 auto; text-align: left; background: #fff; padding: 15px 20px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 5px 15px rgba(0,0,0,0.01);">
+            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; text-align: center; color: #666;">Send a Direct Message</h4>
             
-            <div style="display: flex; flex-direction: column; gap: 15px;">
-                <input type="text" id="msg-name" placeholder="Your Name" style="width: 100%; border: 1px solid #eee; background: #fdfdfd;">
-                <input type="email" id="msg-contact" placeholder="Email (To reply back)" style="width: 100%; border: 1px solid #eee; background: #fdfdfd;">
-                <textarea id="msg-text" placeholder="Write your message to the artist..." rows="4" style="width: 100%; padding: 12px; border: 1px solid #eee; background: #fdfdfd; font-family: inherit; font-size: 0.9rem; border-radius: 4px; resize: none;"></textarea>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Row 1: Name and Email Side-by-Side -->
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="msg-name" placeholder="Your Name" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd;">
+                    <input type="email" id="msg-contact" placeholder="Email or Phone" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd;">
+                </div>
                 
-                <button class="btn-publish" id="send-msg-btn" onclick="sendDirectMessage()" style="width: 100%; border-radius: 4px; padding: 14px; font-size: 0.85rem; letter-spacing: 1px;">DM to Artist</button>
+                <!-- Row 2: Shorter Message Box and DM Button Side-by-Side -->
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="msg-text" placeholder="Write your message here (300 Character)..." maxlength="300" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd; font-family: inherit; border-radius: 4px;">
+                    <button class="btn-publish" id="send-msg-btn" onclick="sendDirectMessage()" style="padding: 8px 20px; font-size: 0.8rem; letter-spacing: 1px; white-space: nowrap; border-radius: 4px; height: 36px; display: flex; align-items: center; justify-content: center;">DM to Artist</button>
+                </div>
             </div>
         </div>
     </section>
@@ -486,7 +493,7 @@
         // Execute the tracking pipeline instantly on window initialization
         runInternalVisitorCounter();
 
-        // --- DIRECT MESSAGE TRANSMISSION PIPELINE WITH GEOLOCATION ---
+// --- DIRECT MESSAGE TRANSMISSION PIPELINE ---
         window.sendDirectMessage = async () => {
             const nameEl = document.getElementById('msg-name');
             const contactEl = document.getElementById('msg-contact');
@@ -502,17 +509,23 @@
                 return;
             }
 
+            // Enforce the 300 character limit on the server-side as well
+            if (text.length > 300) {
+                alert("Message is too long. Please keep it under 300 characters.");
+                return;
+            }
+
+            btnEl.disabled = true;
+            btnEl.innerHTML = "Locating & Sending...";
+
             let locationString = "Location Not Provided";
 
             try {
-                btnEl.disabled = true;
-                btnEl.innerHTML = "Locating & Sending...";
-
-                // Request geolocation coordinates from the browser
+                // BLOCK 1: Halt and wait synchronously for GPS coordinates
                 if (navigator.geolocation) {
                     const position = await new Promise((resolve, reject) => {
                         navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                            timeout: 5000, 
+                            timeout: 6000, 
                             maximumAge: 0 
                         });
                     });
@@ -520,7 +533,7 @@
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     
-                    // Decode coordinates into a friendly City, Country string
+                    // BLOCK 2: Halt and wait synchronously for the City/Country translation
                     const geoResponse = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
                     if (geoResponse.ok) {
                         const geoData = await geoResponse.json();
@@ -532,11 +545,11 @@
                     }
                 }
             } catch (geoError) {
-                console.log("Location skipped for DM.");
+                console.log("Location request was denied or timed out. Proceeding without it.");
             }
 
             try {
-                // Save everything cleanly into your secure cloud storage database
+                // BLOCK 3: Only after blocks 1 and 2 finish, save everything to Firebase
                 await addDoc(collection(db, "messages"), {
                     senderName: name || "Anonymous Visitor",
                     senderContact: contact || "None Provided",
@@ -547,7 +560,7 @@
 
                 alert("Message sent successfully! Thank you for reaching out.");
                 
-                // Reset form fields
+                // Reset fields
                 nameEl.value = "";
                 contactEl.value = "";
                 textEl.value = "";
