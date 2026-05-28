@@ -141,14 +141,16 @@
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <!-- Row 1: Name and Email Side-by-Side -->
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="msg-name" placeholder="Your Name" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd;">
-                    <input type="email" id="msg-contact" placeholder="Email or Phone" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd;">
+                    <input type="text" id="msg-name" placeholder="Your Name*" oninput="checkFormReady()" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd;">
+                    <input type="email" id="msg-contact" placeholder="Email*" oninput="checkFormReady()" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd;">
                 </div>
                 
                 <!-- Row 2: Shorter Message Box and DM Button Side-by-Side -->
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" id="msg-text" placeholder="Write your message here (300 Character)..." maxlength="300" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd; font-family: inherit; border-radius: 4px;">
-                    <button class="btn-publish" id="send-msg-btn" onclick="sendDirectMessage()" style="padding: 8px 20px; font-size: 0.8rem; letter-spacing: 1px; white-space: nowrap; border-radius: 4px; height: 36px; display: flex; align-items: center; justify-content: center;">DM to Artist</button>
+                    <input type="text" id="msg-text" placeholder="Write your message here (300 Character)..." oninput="checkFormReady()" maxlength="300" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #eee; background: #fdfdfd; font-family: inherit; border-radius: 4px;">
+                    
+                    <button class="btn-publish" id="send-msg-btn" onclick="sendDirectMessage()" disabled style="width: 100%; border-radius: 4px; padding: 14px; font-size: 0.85rem; letter-spacing: 1px;">DM to Artist</button>
+                    // <button class="btn-publish" id="send-msg-btn" onclick="sendDirectMessage()" style="padding: 8px 20px; font-size: 0.8rem; letter-spacing: 1px; white-space: nowrap; border-radius: 4px; height: 36px; display: flex; align-items: center; justify-content: center;">DM to Artist</button>
                 </div>
             </div>
         </div>
@@ -493,6 +495,15 @@
         // Execute the tracking pipeline instantly on window initialization
         runInternalVisitorCounter();
 
+        window.checkFormReady = () => {
+            const nameFilled = document.getElementById('msg-name').value.trim() !== "";
+            const contactFilled = document.getElementById('msg-contact').value.trim() !== "";
+            const textFilled = document.getElementById('msg-text').value.trim() !== "";
+            
+            // Unlocks button only if all three have text
+            document.getElementById('send-msg-btn').disabled = !(nameFilled && contactFilled && textFilled);
+        };
+
 // --- DIRECT MESSAGE TRANSMISSION PIPELINE ---
         window.sendDirectMessage = async () => {
             const nameEl = document.getElementById('msg-name');
@@ -569,6 +580,7 @@
             } finally {
                 btnEl.disabled = false;
                 btnEl.innerHTML = "DM to Artist";
+                checkFormReady();
             }
         };
 
