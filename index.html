@@ -452,9 +452,20 @@
             if(!title || !url) return alert("Title and Image URL are required.");
 
             try {
-                await addDoc(collection(db, "paintings"), {
-                    title, meta, url, likes: 0, comments: [], createdAt: serverTimestamp()
+                // 1. Create a clean Document ID based on the painting's title and timestamp
+                const safeTitle = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() || "untitled";
+                const customDocId = `${safeTitle}-${Date.now()}`;
+
+                // 2. Use setDoc with the specific doc() path instead of addDoc
+                await setDoc(doc(db, "paintings", customDocId), {
+                    title, 
+                    meta, 
+                    url, 
+                    likes: 0, 
+                    comments: [], 
+                    createdAt: serverTimestamp()
                 });
+                
                 document.getElementById('new-title').value = "";
                 document.getElementById('new-meta').value = "";
                 document.getElementById('new-url').value = "";
