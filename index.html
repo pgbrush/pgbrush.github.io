@@ -557,9 +557,12 @@
                 console.log("Location request was denied or timed out. Proceeding without it.");
             }
 
-            try {
-                // BLOCK 3: Only after blocks 1 and 2 finish, save everything to Firebase
-                await addDoc(collection(db, "messages"), {
+        try {
+                // BLOCK 3: Generate custom ID and save to Firebase
+                const safeName = name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() || "anonymous-visitor";
+                const customDocId = `${safeName}-${Date.now()}`;
+
+                await setDoc(doc(db, "messages", customDocId), {
                     senderName: name || "Anonymous Visitor",
                     senderContact: contact || "None Provided",
                     messageContent: text,
